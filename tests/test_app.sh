@@ -19,6 +19,7 @@ test_promtool_config() {
   for k in $(echo "$cm" | jq -r 'keys[]'); do echo "$cm" | jq -r --arg k "$k" '.[$k]' > "$d/$k"; done
   img=$(render dev | yq 'select(.kind=="Deployment") | .spec.template.spec.containers[] | select(.name=="prometheus-server") | .image')
   # The chart points rule files at /etc/config; mount the ConfigMap there.
+  chmod -R a+rX "$d" # containers run as non-root; mktemp -d is 0700 on Linux
   docker run --rm -v "$d:/etc/config:ro" --entrypoint promtool "$img" check config /etc/config/prometheus.yml
 }
 
