@@ -1,1 +1,49 @@
-{}
+# Baked into the wrapper chart (part of what we test and promote).
+# Plain Prometheus: one server, no operator, no Grafana, no exporters.
+prometheus:
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  configmapReload:
+    prometheus:
+      image:
+        # v0.95.1 (chart default) is amd64-only; v0.94.2 has arm64 too.
+        tag: v0.94.2
+  server:
+    fullnameOverride: prometheus-server
+    persistentVolume:
+      enabled: false
+    resources:
+      requests: {cpu: 50m, memory: 128Mi}
+      limits: {memory: 512Mi}
+  # Keep only the chart's own `prometheus` job; app targets come from
+  # extraScrapeConfigs in release.yaml.
+  scrapeConfigs:
+    kubernetes-api-servers:
+      enabled: false
+    kubernetes-nodes:
+      enabled: false
+    kubernetes-nodes-cadvisor:
+      enabled: false
+    kubernetes-service-endpoints:
+      enabled: false
+    kubernetes-service-endpoints-slow:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kubernetes-services:
+      enabled: false
+    kubernetes-pods:
+      enabled: false
+    kubernetes-pods-slow:
+      enabled: false
+
+# Our Helm tests.
+promoTest:
+  image: alpine/kubectl:1.37.2@sha256:1a7fc3308a8eee1c8bd177930fc521088c6dc64ad8b68c88319151fd87d79deb
+  url: http://prometheus-server.prometheus.svc

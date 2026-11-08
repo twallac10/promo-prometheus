@@ -1,8 +1,8 @@
 # Upstream chart source and pinned version. Changing this on main triggers the
 # mirror workflow, which builds chart/ and opens a PR for the first tier.
 upstream:
-  repo: https://prometheus.invalid/charts
+  repo: https://prometheus-community.github.io/helm-charts
   chart: prometheus
-  version: 0.0.0
+  version: 29.45.1
 wrapper:
   name: promo-prometheus

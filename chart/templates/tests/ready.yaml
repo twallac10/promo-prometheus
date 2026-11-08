@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-ready
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: {{ .Values.promoTest.image }}
+      command: [sh, -c]
+      args:
+        - |
+          for i in $(seq 1 30); do
+            curl -fsS {{ .Values.promoTest.url }}/-/ready && { echo; echo "PASS: ready"; exit 0; }
+            echo "attempt $i"; sleep 3
+          done
+          echo "FAIL: /-/ready"; exit 1

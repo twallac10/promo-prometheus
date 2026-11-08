@@ -1,0 +1,24 @@
+{{- /* Ready is not working: the canary's scrape target must actually be up. */}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-canary-up
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: {{ .Values.promoTest.image }}
+      command: [sh, -c]
+      args:
+        - |
+          for i in $(seq 1 40); do
+            out=$(curl -fsS -G {{ .Values.promoTest.url }}/api/v1/query --data-urlencode 'query=up{job="canary-podinfo"}') || true
+            echo "attempt $i: $out"
+            echo "$out" | grep -q '"1"\]' && { echo "PASS: canary target up"; exit 0; }
+            sleep 5
+          done
+          curl -fsS {{ .Values.promoTest.url }}/api/v1/targets?state=active || true
+          echo "FAIL: canary-podinfo target not up"; exit 1

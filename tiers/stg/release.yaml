@@ -17,4 +17,10 @@ metadata:
   name: prometheus
   namespace: prometheus
 spec:
-  values: {}
+  values:
+    prometheus:
+      extraScrapeConfigs: |
+        - job_name: canary-podinfo
+          scrape_interval: 15s
+          static_configs:
+            - targets: [podinfo.canary.svc:9898]
