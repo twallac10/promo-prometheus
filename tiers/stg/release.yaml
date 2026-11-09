@@ -16,6 +16,8 @@ kind: HelmRelease
 metadata:
   name: prometheus
   namespace: prometheus
+  annotations:
+    event.toolkit.fluxcd.io/release-id: sha256:08e03903fd76032fe6be8b4396492e2c2b214e3f63fcece5658eca94f91b04d4
 spec:
   values:
     prometheus:
