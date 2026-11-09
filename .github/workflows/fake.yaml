@@ -1,0 +1,9 @@
+# TEST (Phase 3 review): can a PR's own workflow satisfy the required check by name?
+name: fake
+on: pull_request
+permissions: {}
+jobs:
+  promotion-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "fake promotion-gate"
