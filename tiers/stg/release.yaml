@@ -26,3 +26,4 @@ spec:
           scrape_interval: 15s
           static_configs:
             - targets: [podinfo.canary.svc:9898]
+    probe: x
