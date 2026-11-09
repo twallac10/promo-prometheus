@@ -13,4 +13,4 @@ spec:
   values:
     prometheus:
       server:
-        retention: 2h
+        retention: 3h
