@@ -1,0 +1,14 @@
+{{- /* Behaviour tests (Testkube): Ready is not working; the canary's scrape target must be up. */}}
+{{- define "prometheus.check.canary-target-up" -}}
+for i in $(seq 1 40); do
+  out=$(curl -fsS -G {{ .Values.promoTest.url }}/api/v1/query --data-urlencode 'query=up{job="canary-podinfo"}') || true
+  echo "attempt $i: $out"
+  echo "$out" | grep -q '"1"\]' && { echo "PASS: canary target up"; exit 0; }
+  sleep 5
+done
+curl -fsS "{{ .Values.promoTest.url }}/api/v1/targets?state=active" || true
+echo "FAIL: canary-podinfo target not up"; exit 1
+{{- end -}}
+{{ include "promo.behaviour" (dict "ctx" . "checks" (list
+  (dict "name" "canary-target-up" "script" (include "prometheus.check.canary-target-up" .))
+)) }}

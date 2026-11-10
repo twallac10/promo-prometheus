@@ -14,3 +14,5 @@ spec:
     prometheus:
       server:
         retention: 2h
+    behaviour:
+      tier: dev

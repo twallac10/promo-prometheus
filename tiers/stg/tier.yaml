@@ -15,3 +15,5 @@ spec:
     prometheus:
       server:
         retention: 6h
+    behaviour:
+      tier: stg

@@ -15,3 +15,5 @@ spec:
     prometheus:
       server:
         retention: 12h
+    behaviour:
+      tier: prd

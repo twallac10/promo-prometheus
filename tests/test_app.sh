@@ -25,5 +25,6 @@ test_promtool_config() {
 
 test_prometheus_tests() {
   hooks=$(render dev | test_hooks | yq 'select(.kind=="Pod") | .metadata.name' | grep -v -- '---' | sort | tr '\n' ' ')
-  [ "$hooks" = "prometheus-test-canary-up prometheus-test-ready " ] || fail "test pods: $hooks"
+  [ "$hooks" = "prometheus-test-ready " ] || fail "smoke test pods (Helm): $hooks"
+  [ "$(check_names | tr '\n' ' ')" = "canary-target-up " ] || fail "behaviour checks (Testkube): $(check_names)"
 }
