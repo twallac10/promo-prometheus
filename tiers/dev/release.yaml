@@ -6,10 +6,10 @@ metadata:
   name: prometheus
   namespace: prometheus
   annotations:
-    promo.twallac10.dev/chart-version: 29.45.1-1
+    promo.twallac10.dev/chart-version: 29.45.1-2
 spec:
   ref:
-    digest: sha256:3085014e2d2abaa4586ff2a457bf3b800d7ede2541ebe14cb10f4227621c33d3
+    digest: sha256:17eabd5ec522e2923e39d099fd3683316edb23461a9716d977565ba739e6ef87
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -17,7 +17,7 @@ metadata:
   name: prometheus
   namespace: prometheus
   annotations:
-    event.toolkit.fluxcd.io/release-id: sha256:08e03903fd76032fe6be8b4396492e2c2b214e3f63fcece5658eca94f91b04d4
+    event.toolkit.fluxcd.io/release-id: sha256:ae5c3ae23383d8cfa22e80b04a1f99c51c06e8751b9dbabcefe66268461e034f
 spec:
   values:
     prometheus:
