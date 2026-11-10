@@ -28,3 +28,15 @@ test_prometheus_tests() {
   [ "$hooks" = "prometheus-test-ready " ] || fail "smoke test pods (Helm): $hooks"
   [ "$(check_names | tr '\n' ' ')" = "canary-target-up " ] || fail "behaviour checks (Testkube): $(check_names)"
 }
+
+test_canary_check_uses_the_loaded_config() {
+  # Right after an upgrade Prometheus may still run the old config: a removed scrape job
+  # still looks "up". The check must read the release's ConfigMap, fail if the canary job
+  # isn't in it, and wait until Prometheus has loaded those jobs before querying.
+  s=$(behaviour | yq 'select(.kind=="TestWorkflow") | .spec.steps[] | select(.name == "canary-target-up") | .shell')
+  echo "$s" | grep -q 'kubectl get configmap prometheus-server -n prometheus' || fail "must read the release's ConfigMap"
+  echo "$s" | grep -q '/api/v1/status/config' || fail "must compare with the loaded config"
+  echo "$s" | grep -q 'canary scrape job not configured' || fail "must fail clearly when the job is missing"
+  r=$(render dev | yq -o json -I0 'select(.kind=="Role" and .metadata.name=="prometheus-behaviour") | {"ns": .metadata.namespace, "rules": .rules}')
+  [ "$r" = '{"ns":"prometheus","rules":[{"apiGroups":[""],"resources":["configmaps"],"resourceNames":["prometheus-server"],"verbs":["get"]}]}' ] || fail "RBAC: $r"
+}

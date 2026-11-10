@@ -2,7 +2,7 @@ apiVersion: v2
 name: promo-prometheus
 description: Wrapper chart. Upstream chart as a dependency plus our Helm tests.
 type: application
-version: 29.45.1-2
+version: 29.45.1-3
 dependencies:
   - name: prometheus
     version: 29.45.1

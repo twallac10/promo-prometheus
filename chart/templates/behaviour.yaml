@@ -1,14 +1,56 @@
-{{- /* Behaviour tests (Testkube): Ready is not working; the canary's scrape target must be up. */}}
+{{- /*
+Behaviour tests (Testkube): Ready is not working; the canary's scrape target must
+be up under this release's configuration. Right after an upgrade Prometheus may
+still run the old config (a removed job still looks "up"), so the check first
+waits until the scrape jobs Prometheus has loaded match the release's ConfigMap.
+*/}}
 {{- define "prometheus.check.canary-target-up" -}}
+url={{ .Values.promoTest.url }}
+jobs() { grep -o 'job_name: *[A-Za-z0-9_-]*' | sed 's/job_name: *//' | sort | tr '\n' ' ' | sed 's/ *$//'; }
+want=$(kubectl get configmap prometheus-server -n {{ .Release.Namespace }} -o jsonpath='{.data.prometheus\.yml}' | jobs)
+echo "release config jobs: $want"
+case " $want " in *" canary-podinfo "*) ;; *) echo "FAIL: canary scrape job not configured in this release"; exit 1;; esac
+for i in $(seq 1 60); do
+  loaded=$(curl -fsS "$url/api/v1/status/config" | sed 's/\\n/\n/g' | jobs) || true
+  [ "$loaded" = "$want" ] && break
+  echo "attempt $i: Prometheus still runs jobs [$loaded], waiting for [$want]"; sleep 5
+done
+[ "$loaded" = "$want" ] || { echo "FAIL: Prometheus never loaded this release's config"; exit 1; }
 for i in $(seq 1 40); do
-  out=$(curl -fsS -G {{ .Values.promoTest.url }}/api/v1/query --data-urlencode 'query=up{job="canary-podinfo"}') || true
+  out=$(curl -fsS -G "$url/api/v1/query" --data-urlencode 'query=up{job="canary-podinfo"}') || true
   echo "attempt $i: $out"
   echo "$out" | grep -q '"1"\]' && { echo "PASS: canary target up"; exit 0; }
   sleep 5
 done
-curl -fsS "{{ .Values.promoTest.url }}/api/v1/targets?state=active" || true
+curl -fsS "$url/api/v1/targets?state=active" || true
 echo "FAIL: canary-podinfo target not up"; exit 1
 {{- end -}}
 {{ include "promo.behaviour" (dict "ctx" . "checks" (list
   (dict "name" "canary-target-up" "script" (include "prometheus.check.canary-target-up" .))
 )) }}
+---
+# The check reads this release's Prometheus config.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-behaviour
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: [configmaps]
+    resourceNames: [prometheus-server]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-behaviour
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}-behaviour
+subjects:
+  - kind: ServiceAccount
+    name: promo-behaviour-{{ .Release.Name }}
+    namespace: testkube
