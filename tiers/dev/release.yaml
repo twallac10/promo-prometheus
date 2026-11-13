@@ -17,8 +17,12 @@ metadata:
   name: prometheus
   namespace: prometheus
   annotations:
-    event.toolkit.fluxcd.io/release-id: sha256:bf6d6a8049703e7698b7a8a98a1dcc6367c7ea79a8d5ff70202893e95320ee70
+    event.toolkit.fluxcd.io/release-id: sha256:4ebe4afd92f738eeb91d3a6d9627c1f99e5f9b538bd1009ad01b883c3640e38d
 spec:
   values:
     prometheus:
-      extraScrapeConfigs: ""
+      extraScrapeConfigs: |
+        - job_name: canary-podinfo
+          scrape_interval: 15s
+          static_configs:
+            - targets: [podinfo.canary.svc:9898]
